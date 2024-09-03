@@ -1,6 +1,6 @@
-# DEPRECATED
+# NOTICE
 
-This mod will receive no further updates from me and has been archived and marked as deprecated.
+This mod will receive no further updates from me and has been archived and marked as deprecated. If you would like to continue its development feel free to get in contact with me. You are also free to fork it and create your own version
 
 # Extra Enchantments & Curses
 
