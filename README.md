@@ -1,3 +1,7 @@
+# DEPRECATED
+
+This mod will receive no further updates from me and has been archived and marked as deprecated.
+
 # Extra Enchantments & Curses
 
 A mod that adds new Enchantments & Curses to Minecraft
