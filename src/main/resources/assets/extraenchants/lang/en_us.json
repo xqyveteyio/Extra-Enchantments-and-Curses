@@ -78,7 +78,7 @@
   "enchantment.extra_enchantments.fragility_curse": "Curse of Fragility",
   "enchantment.extra_enchantments.fragility_curse.desc": "Causes items to lose durability at a faster rate",
 
-  "text.config.extra-enchantments-and-curses-config.title": "Extra Enchantments & Curses v1.9 for Fabric",
+  "text.config.extra-enchantments-and-curses-config.title": "Extra Enchantments & Curses v1.9.1 for Fabric",
   "text.config.extra-enchantments-and-curses-config.section.Enchantments": "Enchantments",
   "text.config.extra-enchantments-and-curses-config.category.burningThorns": "Burning Thorns",
   "text.config.extra-enchantments-and-curses-config.option.burningThorns.maxLevel": "Max level",
@@ -747,6 +747,10 @@
   "text.config.extra-enchantments-and-curses-config.option.echo.weight": "Rarity",
   "text.config.extra-enchantments-and-curses-config.option.echo.effectsDisabled": "Disable effects",
   "text.config.extra-enchantments-and-curses-config.option.echo.effectsDisabled.tooltip": "Check this option if you want to disable the enchantment's effects",
+
+  "text.config.extra-enchantments-and-curses-config.section.Tuning": "Tuning",
+  "text.config.extra-enchantments-and-curses-config.option.overshieldHealthPerLevel": "Overshield health per level",
+  "text.config.extra-enchantments-and-curses-config.option.overshieldHealthPerLevel.tooltip": "Health points granted by each Overshield level, counted separately for every enchanted armour piece. Two points is one heart.",
 
   "text.config.extra-enchantments-and-curses-config.section.Curses": "Curses",
   "text.config.extra-enchantments-and-curses-config.category.curseOfAttrition": "Curse of Attrition",

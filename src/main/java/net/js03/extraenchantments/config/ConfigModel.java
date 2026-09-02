@@ -153,6 +153,12 @@ public class ConfigModel {
     public EnchantmentOptions targetLock = new EnchantmentOptions(1, true, true, true, EnchantmentTarget.CROSSBOW,
             new ItemOptions(), Enchantment.Rarity.VERY_RARE, false);
 
+    @SectionHeader("Tuning")
+    // Health points, not hearts: one heart is two points. Every Overshield level on every worn
+    // armour piece contributes this much.
+    @RangeConstraint(min = 1, max = 20)
+    public int overshieldHealthPerLevel = 4;
+
     @SectionHeader("Curses")
     @Nest
     public EnchantmentOptions curseOfAttrition = new EnchantmentOptions(1, true, true, true, EnchantmentTarget.WEAPON,

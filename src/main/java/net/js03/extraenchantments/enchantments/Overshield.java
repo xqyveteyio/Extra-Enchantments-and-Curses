@@ -10,7 +10,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.*;
 
-;import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Overshield extends Enchantment {

@@ -7,6 +7,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -24,6 +26,7 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -31,6 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Objects;
 import java.util.Random;
+import java.util.UUID;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerMixin extends LivingEntity {
@@ -47,10 +51,10 @@ public abstract class PlayerMixin extends LivingEntity {
     private int painCycleHits = 0;
     private Random rng = new Random();
 
-    private static double previousMaxHealth;
-    private boolean isOvershieldActive = true;
-    private boolean isOvBonusActive = false;
-    private int lastOvLevel;
+    @Unique
+    private static final UUID OVERSHIELD_HEALTH_MODIFIER_ID = UUID.fromString("6f3d7b1c-8a25-4e0f-9b62-2c4f5a8d1e73");
+    @Unique
+    private static final String OVERSHIELD_HEALTH_MODIFIER_NAME = "extraenchantments:overshield_health_bonus";
 
     protected PlayerMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
@@ -117,57 +121,7 @@ public abstract class PlayerMixin extends LivingEntity {
         if (spectralLevel > 0 && !ExtraEnchantsMain.CONFIG.spectralVision.effectsDisabled()) {
             this.removeStatusEffect(StatusEffects.DARKNESS);
         }
-        if (!ExtraEnchantsMain.CONFIG.overshield.effectsDisabled()) {
-            if (overshieldLevelH > 0 || overshieldLevelC > 0 || overshieldLevelL > 0 || overshieldLevelF > 0) {
-                if (!isOvershieldActive) {
-                    previousMaxHealth = Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).getValue();
-                    isOvershieldActive = true;
-                    if (overshieldLevelH > 0) {
-                        Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(previousMaxHealth + overshieldLevelH * 2);
-                    }
-                    if (overshieldLevelC > 0) {
-                        Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(previousMaxHealth + overshieldLevelC * 2);
-                    }
-                    if (overshieldLevelL > 0) {
-                        Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(previousMaxHealth + overshieldLevelL * 2);
-                    }
-                    if (overshieldLevelF > 0) {
-                        Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(previousMaxHealth + overshieldLevelF * 2);
-                    }
-                    System.out.println("Previous max health (1) : " + previousMaxHealth);
-                }
-                isOvBonusActive = true;
-                if (overshieldLevelH > 0) {
-                    lastOvLevel = overshieldLevelH;
-                } else if (overshieldLevelC > 0) {
-                    lastOvLevel = overshieldLevelC;
-                } else if (overshieldLevelL > 0) {
-                    lastOvLevel = overshieldLevelL;
-                } else if (overshieldLevelF > 0) {
-                    lastOvLevel = overshieldLevelF;
-                }
-            } else {
-                if (isOvershieldActive) {
-                    isOvershieldActive = false;
-                    if (previousMaxHealth != 0 && isOvBonusActive) {
-                        System.out.println("Previous max health (2) : " + previousMaxHealth);
-                        System.out.println("Restore health");
-                        isOvBonusActive = false;
-                        Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(previousMaxHealth);
-                    } else {
-                        if (isOvBonusActive) {
-                            previousMaxHealth = Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).getValue() - (lastOvLevel * 2);
-                            Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(previousMaxHealth);
-                            System.out.println("Previous max health (3) : " + previousMaxHealth);
-                            isOvBonusActive = false;
-                        }
-                    }
-                }
-            }
-        } else {
-            isOvershieldActive = false;
-            Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)).setBaseValue(previousMaxHealth);
-        }
+        updateOvershieldBonus(overshieldLevelH + overshieldLevelC + overshieldLevelL + overshieldLevelF);
 
         // Sword & Tools behaviour
         if (reachLevel > 0 && !ExtraEnchantsMain.CONFIG.reach.effectsDisabled()) {
@@ -204,6 +158,37 @@ public abstract class PlayerMixin extends LivingEntity {
             if (swiftnessLevel <= 0) {
                 Objects.requireNonNull(this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_SPEED)).setBaseValue(EntityAttributes.GENERIC_ATTACK_SPEED.getDefaultValue());
             }
+        }
+    }
+
+    // The bonus is applied as an attribute modifier rather than written into the attribute's base
+    // value: the base value is persisted in the player's NBT, so any bonus that failed to be
+    // subtracted again stayed forever, and reading it back with getValue() also swallowed max health
+    // modifiers contributed by other mods.
+    @Unique
+    private void updateOvershieldBonus(int totalLevel) {
+        if (this.getWorld().isClient()) {
+            return;
+        }
+        EntityAttributeInstance maxHealth = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+        if (maxHealth == null) {
+            return;
+        }
+        double bonus = ExtraEnchantsMain.CONFIG.overshield.effectsDisabled()
+                ? 0
+                : totalLevel * (double) ExtraEnchantsMain.CONFIG.overshieldHealthPerLevel();
+        EntityAttributeModifier current = maxHealth.getModifier(OVERSHIELD_HEALTH_MODIFIER_ID);
+        if (bonus <= 0) {
+            if (current != null) {
+                maxHealth.removeModifier(OVERSHIELD_HEALTH_MODIFIER_ID);
+            }
+        } else if (current == null || current.getValue() != bonus) {
+            maxHealth.removeModifier(OVERSHIELD_HEALTH_MODIFIER_ID);
+            maxHealth.addTemporaryModifier(new EntityAttributeModifier(OVERSHIELD_HEALTH_MODIFIER_ID,
+                    OVERSHIELD_HEALTH_MODIFIER_NAME, bonus, EntityAttributeModifier.Operation.ADDITION));
+        }
+        if (this.getHealth() > this.getMaxHealth()) {
+            this.setHealth(this.getMaxHealth());
         }
     }
 
