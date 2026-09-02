@@ -1,0 +1,116 @@
+name: Build
+
+# Manual only. This branch holds no mod code; it only drives builds of the version
+# branches, each of which targets one Minecraft version.
+on:
+  workflow_dispatch:
+    inputs:
+      branches:
+        description: 'Version branches to build: "all", or a comma-separated list such as "26.1-fabric, 1.21.1-fabric"'
+        required: false
+        default: all
+        type: string
+
+jobs:
+  discover:
+    name: Select branches
+    runs-on: ubuntu-latest
+    outputs:
+      branches: ${{ steps.select.outputs.branches }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve selection
+        id: select
+        # Taken through the environment rather than interpolated into the script, so a branch
+        # name can never be treated as shell.
+        env:
+          REQUESTED: ${{ inputs.branches }}
+        run: |
+          set -euo pipefail
+
+          # Every supported Minecraft version lives on its own <version>-fabric branch, so
+          # adding a version needs no change here.
+          mapfile -t available < <(
+            git for-each-ref --format='%(refname:short)' 'refs/remotes/origin/*-fabric' \
+              | sed 's|^origin/||' | sort -V
+          )
+
+          if [ ${#available[@]} -eq 0 ]; then
+            echo "::error::No *-fabric branches found on the remote."
+            exit 1
+          fi
+
+          selected=()
+          if [ -z "${REQUESTED// /}" ] || [ "$(echo "$REQUESTED" | tr '[:upper:]' '[:lower:]')" = "all" ]; then
+            selected=("${available[@]}")
+          else
+            IFS=',' read -ra requested <<< "$REQUESTED"
+            for branch in "${requested[@]}"; do
+              branch="$(echo "$branch" | xargs)"
+              [ -z "$branch" ] && continue
+              if printf '%s\n' "${available[@]}" | grep -qxF -- "$branch"; then
+                selected+=("$branch")
+              else
+                echo "::error::Unknown branch '$branch'. Available: ${available[*]}"
+                exit 1
+              fi
+            done
+          fi
+
+          if [ ${#selected[@]} -eq 0 ]; then
+            echo "::error::No branches selected."
+            exit 1
+          fi
+
+          {
+            echo "### Building ${#selected[@]} of ${#available[@]} version branches"
+            printf '-  `%s`\n' "${selected[@]}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          json=$(printf '%s\n' "${selected[@]}" | jq -R . | jq -sc .)
+          echo "branches=$json" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.branch }}
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      # One branch failing should not cancel the others.
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJson(needs.discover.outputs.branches) }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.branch }}
+
+      # Each branch targets a different Java release, so read it out of the build script
+      # rather than keeping a second copy of that fact here.
+      - name: Detect Java version
+        id: java
+        run: |
+          set -euo pipefail
+          version=$(grep -oP 'options\.release\s*=\s*\K\d+' build.gradle)
+          echo "Building ${{ matrix.branch }} with Java $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ steps.java.outputs.version }}
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Build
+        run: ./gradlew build --no-daemon
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.branch }}
+          path: build/libs/*.jar
+          if-no-files-found: error
