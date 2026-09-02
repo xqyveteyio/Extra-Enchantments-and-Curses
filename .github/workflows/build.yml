@@ -95,9 +95,19 @@ jobs:
         id: java
         run: |
           set -euo pipefail
-          version=$(grep -oP 'options\.release\s*=\s*\K\d+' build.gradle)
-          echo "Building ${{ matrix.branch }} with Java $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          target=$(grep -oP 'options\.release\s*=\s*\K\d+' build.gradle)
+
+          # The release the mod compiles to and the JVM Gradle itself runs on are not the
+          # same thing: Loom refuses to load below 21, so the oldest branch has to build
+          # on 21 even though it targets 17. --release keeps the bytecode at the target.
+          jdk=$target
+          if [ "$jdk" -lt 21 ]; then
+            jdk=21
+          fi
+
+          echo "Branch ${{ matrix.branch }} targets Java $target, building on JDK $jdk"
+          echo "version=$jdk" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-java@v6
         with:
