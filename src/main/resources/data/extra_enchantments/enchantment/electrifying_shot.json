@@ -1,0 +1,60 @@
+{
+  "anvil_cost": 8,
+  "description": {
+    "translate": "enchantment.extra_enchantments.electrifying_shot"
+  },
+  "effects": {
+    "minecraft:post_attack": [
+      {
+        "affected": "victim",
+        "effect": {
+          "entity": "minecraft:lightning_bolt",
+          "type": "minecraft:summon_entity"
+        },
+        "enchanted": "attacker",
+        "requirements": {
+          "condition": "minecraft:all_of",
+          "terms": [
+            {
+              "condition": "minecraft:weather_check",
+              "thundering": true
+            },
+            {
+              "condition": "minecraft:entity_properties",
+              "entity": "direct_attacker",
+              "predicate": {
+                "type": "#minecraft:arrows"
+              }
+            },
+            {
+              "chance": {
+                "amount": {
+                  "base": 0.2,
+                  "per_level_above_first": 0.0,
+                  "type": "minecraft:linear"
+                },
+                "type": "minecraft:enchantment_level"
+              },
+              "condition": "minecraft:random_chance"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "exclusive_set": "#extra_enchantments:exclusive_set/bow_special",
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 0
+  },
+  "max_level": 1,
+  "min_cost": {
+    "base": 20,
+    "per_level_above_first": 0
+  },
+  "slots": [
+    "mainhand"
+  ],
+  "supported_items": "#minecraft:enchantable/bow",
+  "weight": 1
+}

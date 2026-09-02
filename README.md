@@ -1,10 +1,48 @@
-# Extra Enchantments & Curses — Fabric 1.20.1
+# Extra Enchantments & Curses
 
-A community-maintained fork of [03-JS/Extra-Enchantments-and-Curses](https://github.com/03-JS/Extra-Enchantments-and-Curses),
-which was archived on 2024-09-03. The upstream README explicitly permits forking, and the project is MIT licensed.
+English | [简体中文](README.zh-CN.md)
 
-Upstream shipped a Fabric branch targeting **1.20.2** and a Forge branch targeting **1.20.1**, but no Fabric build for
-**1.20.1**. This fork fills that gap and carries bug fixes that upstream never received.
+A Fabric mod that adds 29 enchantments and 10 curses to Minecraft. It is a community-maintained fork of
+[03-JS/Extra-Enchantments-and-Curses](https://github.com/03-JS/Extra-Enchantments-and-Curses), which was archived in
+September 2024.
+
+## Requirements
+
+| | |
+| --- | --- |
+| Minecraft | 1.21.1 |
+| Mod loader | Fabric Loader 0.16.0+ |
+| Dependencies | [Fabric API](https://modrinth.com/mod/fabric-api), [owo-lib](https://modrinth.com/mod/owo-lib) |
+| Java | 21+ |
+
+A build for 1.20.1 lives on the [`1.20.1-fabric`](../../tree/1.20.1-fabric) branch.
+
+## What's inside
+
+Everything is obtained the normal way — the enchanting table, anvils, villager trades, fishing, and chest loot. Nothing
+is craftable and no new items are added.
+
+**Weapons** — Lifesteal, Frenzy, Guarding Strike, Pain Cycle, Soul Reaper, Freezing Aspect, Illager's Bane,
+Fisherman's Blade, Enigma Resonator, Swiftness
+
+**Tools** — Reach, Experience Catalyst
+
+**Bows and crossbows** — Echo, Electrifying Shot, Resonating Shot, Shadow Shot, Levitational Shot, Incandescent,
+Supercharge, Target Lock
+
+**Armour** — Overshield, Burning Thorns, Freezing Thorns, Ice Protection, Electrified, Energized, Spectral Vision,
+Hellwalker, Cold Feet
+
+**Curses** — Zeus, Blindness, Withering, Nausea, Weakness, Incompatibility, Fragility, Slowness, the Undead, Attrition
+
+## Configuration
+
+Each enchantment can be switched off individually through Mod Menu, or by editing
+`config/extra-enchantments-and-curses-config.json5`.
+
+Everything else — maximum level, enchanting cost, rarity, which items accept an enchantment, and which enchantments
+conflict — is defined in JSON under `data/extra_enchantments/enchantment/` and can be changed with a datapack, since
+Minecraft 1.21 made enchantments data-driven.
 
 ## Building
 
@@ -12,98 +50,8 @@ Upstream shipped a Fabric branch targeting **1.20.2** and a Forge branch targeti
 ./gradlew build
 ```
 
-The finished jar lands in `build/libs/`. Requires JDK 17 or newer.
+The jar lands in `build/libs/`.
 
-## Differences from upstream 1.9
+## Licence
 
-### Overshield no longer corrupts max health
-
-Upstream implemented the Overshield health bonus by writing into the `generic.max_health` attribute's **base value**,
-and remembered the value to restore with `getAttributeInstance(GENERIC_MAX_HEALTH).getValue()`. Two things go wrong:
-
-- `getValue()` returns the base value **plus every attribute modifier**, including max health modifiers contributed by
-  other mods. That total was then written back into the base value, so each equip/unequip cycle permanently inflated
-  the player's max health by the size of the other mod's bonus. Equipping a Crystal Heart from *Artifacts* (+10) and
-  toggling an Overshield chestplate grew max health by 10 points every cycle, without bound.
-- The base value is persisted in the player's NBT, so any bonus that failed to be subtracted again — a crash, a
-  relog at the wrong moment, or removing the mod — stayed forever.
-
-The bonus is now a plain `EntityAttributeModifier` with a fixed UUID, added as a *temporary* modifier and re-asserted
-every tick. Nothing is ever written to the player's save data, so no state can leak.
-
-### Overshield is no longer silently capped to one armour piece
-
-Upstream applied the bonus with four consecutive `setBaseValue(previous + level * 2)` calls, one per armour slot. Each
-call overwrote the previous one, so only the last matching slot counted (boots winning over leggings over chestplate
-over helmet) and multiple enchanted pieces never stacked. Levels from all four slots are now summed.
-
-Related: `lastOvLevel`, used to subtract the bonus again, resolved slots in the *opposite* priority order (helmet
-first), so a mismatched pair of enchanted pieces subtracted more than it ever added and permanently drained max health.
-That code path is gone.
-
-### Disabling Overshield in the config no longer kills every player
-
-When `overshield.effectsDisabled` was set, upstream ran `setBaseValue(previousMaxHealth)` every tick, where
-`previousMaxHealth` is a `static` field defaulting to `0.0`. Enabling that option set every player's max health base
-value to zero. The option is now honoured by simply not applying the modifier.
-
-### Overshield state is per-player
-
-`previousMaxHealth` was `static`, i.e. shared by every player on a server. There is no per-player mutable state left.
-
-### The Overshield bonus is configurable
-
-New config option `overshieldHealthPerLevel`, default **4** health points (2 hearts) per level per enchanted piece, so
-Overshield V on a chestplate grants +20 points (10 hearts). Upstream hardcoded 2. Set it back to `2` to restore the
-original balance.
-
-### No mixin `@Overwrite` anywhere
-
-Upstream 1.9 replaced six vanilla methods wholesale with `@Overwrite`. A wholesale replacement makes the method
-"merged" as far as Mixin is concerned, and Mixin then *refuses* to let any other mod inject into it, so the game hard
-crashes at startup with `InvalidInjectionException: ... cannot inject into ... merged by ...`. `BowItem.onStoppedUsing`
-and `ItemStack.damage` in particular are targeted by a great many mods.
-
-Every one has been rewritten as a narrow, chainable injection:
-
-| Method | Was | Now |
-| --- | --- | --- |
-| `BowItem.onStoppedUsing` | `@Overwrite` | two `@Redirect`s on the durability and spawn calls |
-| `ItemStack.damage(int, Random, ServerPlayerEntity)` | `@Overwrite` | `@ModifyVariable` on the `amount` argument |
-| `PowderSnowBlock.canWalkOnPowderSnow` | `@Overwrite` | `@Inject` at `HEAD`, cancellable |
-| `MagmaBlock.onSteppedOn` | `@Overwrite` | `@Redirect` on the `Entity.damage` call |
-| `LivingEntity.canFreeze` | `@Overwrite` | `@Inject` at `HEAD`, cancellable |
-| `PlayerEntity.addExhaustion` | `@Overwrite` | `@ModifyVariable` on the `exhaustion` argument |
-
-Two behavioural notes fall out of this:
-
-- Curse of Fragility's extra durability damage is now applied before Unbreaking rolls instead of after, so Unbreaking
-  mitigates part of it. Previously the curse bypassed Unbreaking entirely.
-- Ice Protection's condition was `bl && a < 4 || b < 4 || c < 4 || d < 4`. Java binds `&&` tighter than `||`, so an
-  unenchanted armour slot (level `0 < 4`) forced the whole expression true and made freeze-immune armour stop working
-  whenever the enchantment was enabled. It now does what the name implies: Ice Protection IV or higher on any worn
-  piece prevents freezing.
-
-### Miscellaneous
-
-- Removed four `System.out.println` debug statements that fired on every Overshield equip change.
-- Fixed a stray semicolon before an import in `Overshield.java`.
-- Echo's durability roll used `nextInt(level, 8)`, which throws `IllegalArgumentException` once a config raises Echo's
-  maximum level to 8 or beyond. The upper bound is now clamped above the level.
-
-## Migrating from upstream
-
-Players who used the upstream build may already have an inflated `generic.max_health` base value baked into their save.
-This fork does not touch the base value, so it cannot repair it automatically. Check and repair affected players with:
-
-```
-/attribute <player> minecraft:generic.max_health base get
-/attribute <player> minecraft:generic.max_health base set 20
-```
-
-Have the player take off all Overshield-enchanted gear first.
-
-## Credits
-
-All enchantment and curse designs, art and translations are the work of **JS03**. This fork only ports the code to
-1.20.1 and fixes bugs.
+MIT, inherited from upstream. See [LICENSE](LICENSE).

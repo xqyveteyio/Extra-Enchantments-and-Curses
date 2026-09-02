@@ -66,5 +66,15 @@
   "enchantment.extra_enchantments.soul_reaper": "收魂",
   "enchantment.extra_enchantments.soul_reaper.desc": "降低武器伤害，每次击中中立或敌对生物时有几率治疗自己",
   "enchantment.extra_enchantments.experience_catalyst": "催化",
-  "enchantment.extra_enchantments.experience_catalyst.desc": "增加主手物品获得的经验"
+  "enchantment.extra_enchantments.experience_catalyst.desc": "增加主手物品获得的经验",
+  "enchantment.extra_enchantments.cold_feet": "冰足",
+  "enchantment.extra_enchantments.cold_feet.desc": "可以在细雪上行走",
+  "enchantment.extra_enchantments.echo": "回响",
+  "enchantment.extra_enchantments.echo.desc": "弓射出的箭可以穿透目标，代价是弓的耐久消耗更快",
+  "enchantment.extra_enchantments.energized": "充能",
+  "enchantment.extra_enchantments.energized.desc": "减少玩家累积的疲劳度",
+  "enchantment.extra_enchantments.fragility_curse": "易碎诅咒",
+  "enchantment.extra_enchantments.fragility_curse.desc": "物品的耐久消耗速度大幅加快",
+  "enchantment.extra_enchantments.ice_protection": "抗冻",
+  "enchantment.extra_enchantments.ice_protection.desc": "减少冰冻状态下受到的伤害"
 }

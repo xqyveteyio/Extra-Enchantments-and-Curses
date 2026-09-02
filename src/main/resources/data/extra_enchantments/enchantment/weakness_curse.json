@@ -1,0 +1,34 @@
+{
+  "anvil_cost": 8,
+  "description": {
+    "translate": "enchantment.extra_enchantments.weakness_curse"
+  },
+  "effects": {
+    "minecraft:attributes": [
+      {
+        "amount": {
+          "base": -1.5,
+          "per_level_above_first": 0.0,
+          "type": "minecraft:linear"
+        },
+        "attribute": "minecraft:generic.attack_damage",
+        "id": "extra_enchantments:enchantment.weakness_curse",
+        "operation": "add_value"
+      }
+    ]
+  },
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 0
+  },
+  "max_level": 1,
+  "min_cost": {
+    "base": 25,
+    "per_level_above_first": 0
+  },
+  "slots": [
+    "armor"
+  ],
+  "supported_items": "#minecraft:enchantable/armor",
+  "weight": 1
+}

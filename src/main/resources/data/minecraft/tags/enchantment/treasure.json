@@ -1,0 +1,20 @@
+{
+  "values": [
+    "extra_enchantments:attrition_curse",
+    "extra_enchantments:blindness_curse",
+    "extra_enchantments:cold_feet",
+    "extra_enchantments:electrified",
+    "extra_enchantments:energized",
+    "extra_enchantments:fragility_curse",
+    "extra_enchantments:hellwalker",
+    "extra_enchantments:incompatibility_curse",
+    "extra_enchantments:nausea_curse",
+    "extra_enchantments:overshield",
+    "extra_enchantments:slowness_curse",
+    "extra_enchantments:target_lock",
+    "extra_enchantments:undead_curse",
+    "extra_enchantments:weakness_curse",
+    "extra_enchantments:withering_curse",
+    "extra_enchantments:zeus_curse"
+  ]
+}

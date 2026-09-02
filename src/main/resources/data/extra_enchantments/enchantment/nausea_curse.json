@@ -1,0 +1,34 @@
+{
+  "anvil_cost": 8,
+  "description": {
+    "translate": "enchantment.extra_enchantments.nausea_curse"
+  },
+  "effects": {
+    "minecraft:tick": [
+      {
+        "effect": {
+          "max_amplifier": 0,
+          "max_duration": 4.5,
+          "min_amplifier": 0,
+          "min_duration": 4.5,
+          "to_apply": "minecraft:nausea",
+          "type": "minecraft:apply_mob_effect"
+        }
+      }
+    ]
+  },
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 0
+  },
+  "max_level": 1,
+  "min_cost": {
+    "base": 25,
+    "per_level_above_first": 0
+  },
+  "slots": [
+    "head"
+  ],
+  "supported_items": "#minecraft:enchantable/head_armor",
+  "weight": 1
+}

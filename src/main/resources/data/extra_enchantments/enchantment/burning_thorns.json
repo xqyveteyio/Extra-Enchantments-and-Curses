@@ -1,0 +1,45 @@
+{
+  "anvil_cost": 8,
+  "description": {
+    "translate": "enchantment.extra_enchantments.burning_thorns"
+  },
+  "effects": {
+    "minecraft:post_attack": [
+      {
+        "affected": "attacker",
+        "effect": {
+          "duration": 3.0,
+          "type": "minecraft:ignite"
+        },
+        "enchanted": "victim",
+        "requirements": {
+          "chance": {
+            "amount": {
+              "base": 0.25,
+              "per_level_above_first": 0.25,
+              "type": "minecraft:linear"
+            },
+            "type": "minecraft:enchantment_level"
+          },
+          "condition": "minecraft:random_chance"
+        }
+      }
+    ]
+  },
+  "exclusive_set": "#extra_enchantments:exclusive_set/thorns",
+  "max_cost": {
+    "base": 62,
+    "per_level_above_first": 21
+  },
+  "max_level": 3,
+  "min_cost": {
+    "base": 11,
+    "per_level_above_first": 21
+  },
+  "primary_items": "#minecraft:enchantable/chest_armor",
+  "slots": [
+    "any"
+  ],
+  "supported_items": "#minecraft:enchantable/armor",
+  "weight": 1
+}

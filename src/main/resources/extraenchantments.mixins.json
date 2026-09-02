@@ -2,19 +2,17 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.js03.extraenchantments.mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "BowMixin",
-    "CrossbowMixin",
+    "EnchantmentHelperMixin",
     "ItemStackMixin",
     "LivingEntityMixin",
-    "MagmaBlockMixin",
     "MobMixin",
     "PlayerMixin",
-    "PowderSnowMixin"
+    "PowderSnowMixin",
+    "RangedWeaponMixin"
   ],
-  "client": [
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   }

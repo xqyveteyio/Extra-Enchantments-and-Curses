@@ -1,0 +1,46 @@
+{
+  "anvil_cost": 8,
+  "description": {
+    "translate": "enchantment.extra_enchantments.slowness_curse"
+  },
+  "effects": {
+    "minecraft:attributes": [
+      {
+        "amount": {
+          "base": -0.4,
+          "per_level_above_first": 0.0,
+          "type": "minecraft:linear"
+        },
+        "attribute": "minecraft:generic.movement_speed",
+        "id": "extra_enchantments:enchantment.slowness_curse",
+        "operation": "add_multiplied_total"
+      }
+    ],
+    "minecraft:tick": [
+      {
+        "effect": {
+          "max_amplifier": 3,
+          "max_duration": 1.0,
+          "min_amplifier": 3,
+          "min_duration": 1.0,
+          "to_apply": "minecraft:mining_fatigue",
+          "type": "minecraft:apply_mob_effect"
+        }
+      }
+    ]
+  },
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 0
+  },
+  "max_level": 1,
+  "min_cost": {
+    "base": 25,
+    "per_level_above_first": 0
+  },
+  "slots": [
+    "feet"
+  ],
+  "supported_items": "#minecraft:enchantable/foot_armor",
+  "weight": 1
+}

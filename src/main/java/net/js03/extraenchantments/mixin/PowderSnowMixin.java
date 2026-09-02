@@ -1,9 +1,10 @@
 package net.js03.extraenchantments.mixin;
 
 import net.js03.extraenchantments.ExtraEnchantsMain;
+import net.js03.extraenchantments.registry.ModEnchantments;
 import net.minecraft.block.PowderSnowBlock;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,7 +20,8 @@ public class PowderSnowMixin {
             return;
         }
         if (entity instanceof LivingEntity living
-                && EnchantmentHelper.getEquipmentLevel(ExtraEnchantsMain.COLD_FEET, living) > 0) {
+                && ModEnchantments.levelOn(living.getEquippedStack(EquipmentSlot.FEET),
+                        ModEnchantments.COLD_FEET) > 0) {
             cir.setReturnValue(true);
         }
     }

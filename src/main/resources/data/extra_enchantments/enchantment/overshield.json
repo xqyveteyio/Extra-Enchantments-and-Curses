@@ -1,0 +1,35 @@
+{
+  "anvil_cost": 8,
+  "description": {
+    "translate": "enchantment.extra_enchantments.overshield"
+  },
+  "effects": {
+    "minecraft:attributes": [
+      {
+        "amount": {
+          "base": 4.0,
+          "per_level_above_first": 4.0,
+          "type": "minecraft:linear"
+        },
+        "attribute": "minecraft:generic.max_health",
+        "id": "extra_enchantments:enchantment.overshield",
+        "operation": "add_value"
+      }
+    ]
+  },
+  "max_cost": {
+    "base": 50,
+    "per_level_above_first": 10
+  },
+  "max_level": 5,
+  "min_cost": {
+    "base": 20,
+    "per_level_above_first": 10
+  },
+  "primary_items": "#minecraft:enchantable/chest_armor",
+  "slots": [
+    "armor"
+  ],
+  "supported_items": "#minecraft:enchantable/armor",
+  "weight": 1
+}
