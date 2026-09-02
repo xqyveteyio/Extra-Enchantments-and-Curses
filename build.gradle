@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.11.8'
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
     id 'maven-publish'
 }
 
@@ -11,19 +11,23 @@ base {
 }
 
 repositories {
-    maven { url 'https://maven.wispforest.io' }
+    maven { url = 'https://maven.wispforest.io' }
+    // owo-lib pulls kdl4j, which is only published through JitPack.
+    maven { url = 'https://jitpack.io' }
 }
 
 dependencies {
     // To change the versions see the gradle.properties file
+    // No mappings dependency: Minecraft ships unobfuscated since 26.1, so its own names are final.
+    // For the same reason Loom no longer remaps dependencies, and the modImplementation
+    // configuration it used to add is gone — mod dependencies are plain implementation ones now.
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Other dependencies
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    annotationProcessor modImplementation("io.wispforest:owo-lib:${project.owo_version}")
+    annotationProcessor implementation("io.wispforest:owo-lib:${project.owo_version}")
     include "io.wispforest:owo-sentinel:${project.owo_version}"
 }
 
@@ -36,12 +40,15 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
+    it.options.release = 25
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    // 26.x refuses to start on anything below Java 25. Declared as a toolchain so the build works
+    // regardless of which JDK Gradle itself happens to be running on.
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     // if it is present.

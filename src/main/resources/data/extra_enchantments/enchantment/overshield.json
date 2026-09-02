@@ -11,7 +11,7 @@
           "per_level_above_first": 4.0,
           "type": "minecraft:linear"
         },
-        "attribute": "minecraft:generic.max_health",
+        "attribute": "minecraft:max_health",
         "id": "extra_enchantments:enchantment.overshield",
         "operation": "add_value"
       }

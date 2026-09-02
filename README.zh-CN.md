@@ -10,12 +10,14 @@
 
 | | |
 | --- | --- |
-| Minecraft | 1.21.1 |
-| 加载器 | Fabric Loader 0.16.0+ |
+| Minecraft | 26.1，含 26.1.1 与 26.1.2 修补版 |
+| 加载器 | Fabric Loader 0.19.5+ |
 | 前置 | [Fabric API](https://modrinth.com/mod/fabric-api)、[owo-lib](https://modrinth.com/mod/owo-lib) |
-| Java | 21+ |
+| Java | 25+ |
 
-1.20.1 的版本在 [`1.20.1-fabric`](../../tree/1.20.1-fabric) 分支。
+Minecraft 从 2026 年起不再使用 `1.x` 版本号，改为按「年份 + 当年第几次更新」编号，26.1 就是 1.21.11 之后的那一次更新。
+每次更新都需要单独构建，旧版本分别在 [`1.21.1-fabric`](../../tree/1.21.1-fabric) 和
+[`1.20.1-fabric`](../../tree/1.20.1-fabric) 分支。
 
 ## 内容一览
 
@@ -45,7 +47,7 @@
 ./gradlew build
 ```
 
-产物在 `build/libs/` 目录下。
+产物在 `build/libs/` 目录下。本机没有 Java 25 的话，Gradle 会自动下载一份。
 
 ## 许可
 

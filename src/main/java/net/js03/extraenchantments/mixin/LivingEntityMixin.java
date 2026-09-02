@@ -4,13 +4,14 @@ import net.js03.extraenchantments.ExtraEnchantsMain;
 import net.js03.extraenchantments.effect.EnchantmentState;
 import net.js03.extraenchantments.effect.OnDamagedEffects;
 import net.js03.extraenchantments.registry.ModEnchantments;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,7 +29,7 @@ public abstract class LivingEntityMixin extends Entity implements EnchantmentSta
     };
 
     @Shadow
-    public abstract ItemStack getEquippedStack(EquipmentSlot slot);
+    public abstract ItemStack getItemBySlot(EquipmentSlot slot);
 
     @Unique
     private int extraEnchantments$painCycleHits;
@@ -38,8 +39,8 @@ public abstract class LivingEntityMixin extends Entity implements EnchantmentSta
     @Nullable
     private Entity extraEnchantments$targetLockTarget;
 
-    public LivingEntityMixin(EntityType<?> type, World world) {
-        super(type, world);
+    public LivingEntityMixin(EntityType<?> type, Level level) {
+        super(type, level);
     }
 
     @Override
@@ -82,17 +83,18 @@ public abstract class LivingEntityMixin extends Entity implements EnchantmentSta
             return;
         }
         for (EquipmentSlot slot : ARMOUR_SLOTS) {
-            if (ModEnchantments.levelOn(this.getEquippedStack(slot), ModEnchantments.ICE_PROTECTION) >= 4) {
+            if (ModEnchantments.levelOn(this.getItemBySlot(slot), ModEnchantments.ICE_PROTECTION) >= 4) {
                 cir.setReturnValue(false);
                 return;
             }
         }
     }
 
-    @Inject(method = "damage", at = @At("RETURN"))
-    private void extraEnchantments$onDamaged(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "hurtServer", at = @At("RETURN"))
+    private void extraEnchantments$onDamaged(ServerLevel level, DamageSource source, float amount,
+                                             CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValueZ()) {
-            OnDamagedEffects.onDamaged((LivingEntity) (Object) this, source);
+            OnDamagedEffects.onDamaged(level, (LivingEntity) (Object) this, source);
         }
     }
 }

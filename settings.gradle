@@ -8,3 +8,9 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
+plugins {
+    // 26.x needs a Java 25 toolchain; this lets Gradle fetch one when the machine has none,
+    // so the build does not depend on a system-wide JDK 25 being installed.
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}

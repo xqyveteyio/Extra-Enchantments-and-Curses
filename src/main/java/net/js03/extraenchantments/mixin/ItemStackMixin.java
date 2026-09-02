@@ -2,7 +2,7 @@ package net.js03.extraenchantments.mixin;
 
 import net.js03.extraenchantments.ExtraEnchantsMain;
 import net.js03.extraenchantments.registry.ModEnchantments;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -15,7 +15,7 @@ public abstract class ItemStackMixin {
     // Applied before Unbreaking rolls rather than after, so Unbreaking mitigates part of the
     // curse instead of being bypassed entirely.
     @ModifyVariable(
-            method = "damage(ILnet/minecraft/server/world/ServerWorld;Lnet/minecraft/server/network/ServerPlayerEntity;Ljava/util/function/Consumer;)V",
+            method = "hurtAndBreak(ILnet/minecraft/server/level/ServerLevel;Lnet/minecraft/server/level/ServerPlayer;Ljava/util/function/Consumer;)V",
             at = @At("HEAD"),
             argsOnly = true,
             ordinal = 0

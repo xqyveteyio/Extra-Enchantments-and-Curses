@@ -2,17 +2,18 @@ package net.js03.extraenchantments.effect;
 
 import net.js03.extraenchantments.ExtraEnchantsMain;
 import net.js03.extraenchantments.registry.ModEnchantments;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.BlazeEntity;
-import net.minecraft.entity.mob.MagmaCubeEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Blaze;
+import net.minecraft.world.entity.monster.MagmaCube;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -28,15 +29,12 @@ public final class OnDamagedEffects {
     private OnDamagedEffects() {
     }
 
-    public static void onDamaged(LivingEntity victim, DamageSource source) {
-        if (victim.getWorld().isClient()) {
-            return;
-        }
-        freezingThorns(victim, source.getAttacker());
+    public static void onDamaged(ServerLevel level, LivingEntity victim, DamageSource source) {
+        freezingThorns(victim, source.getEntity());
 
-        if (source.getAttacker() instanceof LivingEntity shooter && source.isIn(DamageTypeTags.IS_PROJECTILE)) {
-            resonatingShot(shooter, victim);
-            targetLock(shooter, victim);
+        if (source.getEntity() instanceof LivingEntity shooter && source.is(DamageTypeTags.IS_PROJECTILE)) {
+            resonatingShot(level, shooter, victim);
+            targetLock(level, shooter, victim);
             shadowShot(shooter, victim);
         }
     }
@@ -45,31 +43,30 @@ public final class OnDamagedEffects {
         if (ExtraEnchantsMain.CONFIG.freezingThorns.effectsDisabled()) {
             return;
         }
-        if (!(attacker instanceof LivingEntity) || attacker instanceof BlazeEntity
-                || attacker instanceof MagmaCubeEntity) {
+        if (!(attacker instanceof LivingEntity) || attacker instanceof Blaze || attacker instanceof MagmaCube) {
             return;
         }
         int level = ModEnchantments.equipmentLevel(victim, ModEnchantments.FREEZING_THORNS);
         if (level <= 0 || ThreadLocalRandom.current().nextInt(1, 5) > level) {
             return;
         }
-        if (!victim.getWorld().getDimension().ultrawarm() && !attacker.isFrozen() && !attacker.isInLava()) {
-            attacker.setFrozenTicks(400);
+        if (!CombatEffects.tooHotToFreeze(victim) && !attacker.isFullyFrozen() && !attacker.isInLava()) {
+            attacker.setTicksFrozen(400);
         }
     }
 
-    private static void resonatingShot(LivingEntity shooter, LivingEntity victim) {
+    private static void resonatingShot(ServerLevel level, LivingEntity shooter, LivingEntity victim) {
         if (ExtraEnchantsMain.CONFIG.resonatingShot.effectsDisabled()) {
             return;
         }
-        int level = ModEnchantments.equipmentLevel(shooter, ModEnchantments.RESONATING_SHOT);
-        if (level <= 0 || ThreadLocalRandom.current().nextInt(35) > level) {
+        int enchantLevel = ModEnchantments.equipmentLevel(shooter, ModEnchantments.RESONATING_SHOT);
+        if (enchantLevel <= 0 || ThreadLocalRandom.current().nextInt(35) > enchantLevel) {
             return;
         }
-        victim.damage(shooter.getDamageSources().generic(), shooter.getHealth() * 0.75f);
+        victim.hurtServer(level, shooter.damageSources().generic(), shooter.getHealth() * 0.75f);
     }
 
-    private static void targetLock(LivingEntity shooter, LivingEntity victim) {
+    private static void targetLock(ServerLevel level, LivingEntity shooter, LivingEntity victim) {
         if (ExtraEnchantsMain.CONFIG.targetLock.effectsDisabled()
                 || !(shooter instanceof EnchantmentState state)) {
             return;
@@ -83,13 +80,12 @@ public final class OnDamagedEffects {
             return;
         }
         float damage = state.extraEnchantments$targetLockDamage();
-        victim.damage(shooter.getDamageSources().indirectMagic(shooter, shooter), damage);
+        victim.hurtServer(level, shooter.damageSources().indirectMagic(shooter, shooter), damage);
         if (damage >= 32f) {
-            shooter.getWorld().playSound(null, victim.getBlockPos(),
-                    victim instanceof PlayerEntity
-                            ? SoundEvents.ENTITY_PLAYER_ATTACK_CRIT
-                            : SoundEvents.ENTITY_ARROW_HIT_PLAYER,
-                    SoundCategory.MASTER, victim instanceof PlayerEntity ? 2f : 1f, 1f);
+            boolean player = victim instanceof Player;
+            shooter.level().playSound(null, victim.getX(), victim.getY(), victim.getZ(),
+                    player ? SoundEvents.PLAYER_ATTACK_CRIT : SoundEvents.ARROW_HIT_PLAYER,
+                    SoundSource.MASTER, player ? 2f : 1f, 1f);
         }
         if (damage < TARGET_LOCK_MAX_DAMAGE) {
             state.extraEnchantments$setTargetLockDamage(damage * 2f);
@@ -97,10 +93,10 @@ public final class OnDamagedEffects {
     }
 
     private static void shadowShot(LivingEntity shooter, LivingEntity victim) {
-        if (ExtraEnchantsMain.CONFIG.shadowShot.effectsDisabled() || !victim.isDead()) {
+        if (ExtraEnchantsMain.CONFIG.shadowShot.effectsDisabled() || !victim.isDeadOrDying()) {
             return;
         }
-        if (!shooter.getWorld().isNight() || shooter.getWorld().isThundering()) {
+        if (!shooter.level().isDarkOutside() || shooter.level().isThundering()) {
             return;
         }
         if (ModEnchantments.equipmentLevel(shooter, ModEnchantments.SHADOW_SHOT) <= 0) {
@@ -109,9 +105,9 @@ public final class OnDamagedEffects {
         if (ThreadLocalRandom.current().nextInt(15) > 2) {
             return;
         }
-        shooter.getWorld().playSound(null, shooter.getBlockPos(), SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE,
-                SoundCategory.MASTER, 1f, 1f);
-        shooter.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 220, 254, false, false, true));
-        shooter.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 220, 254, false, false, true));
+        shooter.level().playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
+                SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.MASTER, 1f, 1f);
+        shooter.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 220, 254, false, false, true));
+        shooter.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 220, 254, false, false, true));
     }
 }

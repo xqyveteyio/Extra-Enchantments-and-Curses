@@ -10,12 +10,14 @@ September 2024.
 
 | | |
 | --- | --- |
-| Minecraft | 1.21.1 |
-| Mod loader | Fabric Loader 0.16.0+ |
+| Minecraft | 26.1, including the 26.1.1 and 26.1.2 hotfixes |
+| Mod loader | Fabric Loader 0.19.5+ |
 | Dependencies | [Fabric API](https://modrinth.com/mod/fabric-api), [owo-lib](https://modrinth.com/mod/owo-lib) |
-| Java | 21+ |
+| Java | 25+ |
 
-A build for 1.20.1 lives on the [`1.20.1-fabric`](../../tree/1.20.1-fabric) branch.
+Minecraft dropped the `1.x` version numbers in 2026 and now numbers releases by year and game drop,
+so 26.1 is the drop that follows 1.21.11. Each drop needs its own build; older ones live on the
+[`1.21.1-fabric`](../../tree/1.21.1-fabric) and [`1.20.1-fabric`](../../tree/1.20.1-fabric) branches.
 
 ## What's inside
 
@@ -50,7 +52,7 @@ Minecraft 1.21 made enchantments data-driven.
 ./gradlew build
 ```
 
-The jar lands in `build/libs/`.
+The jar lands in `build/libs/`. Gradle fetches a Java 25 toolchain by itself if the machine has none.
 
 ## Licence
 

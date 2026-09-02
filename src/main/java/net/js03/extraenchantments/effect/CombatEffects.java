@@ -2,29 +2,30 @@ package net.js03.extraenchantments.effect;
 
 import net.js03.extraenchantments.ExtraEnchantsMain;
 import net.js03.extraenchantments.registry.ModEnchantments;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.boss.dragon.EnderDragonEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.MagmaCubeEntity;
-import net.minecraft.entity.mob.PhantomEntity;
-import net.minecraft.entity.mob.SlimeEntity;
-import net.minecraft.entity.passive.BeeEntity;
-import net.minecraft.entity.passive.DolphinEntity;
-import net.minecraft.entity.passive.GoatEntity;
-import net.minecraft.entity.passive.GolemEntity;
-import net.minecraft.entity.passive.LlamaEntity;
-import net.minecraft.entity.passive.PandaEntity;
-import net.minecraft.entity.passive.PolarBearEntity;
-import net.minecraft.entity.passive.PufferfishEntity;
-import net.minecraft.entity.passive.TraderLlamaEntity;
-import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.mob.HoglinEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.bee.Bee;
+import net.minecraft.world.entity.animal.dolphin.Dolphin;
+import net.minecraft.world.entity.animal.equine.Llama;
+import net.minecraft.world.entity.animal.fish.Pufferfish;
+import net.minecraft.world.entity.animal.goat.Goat;
+import net.minecraft.world.entity.animal.golem.AbstractGolem;
+import net.minecraft.world.entity.animal.panda.Panda;
+import net.minecraft.world.entity.animal.polarbear.PolarBear;
+import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.monster.MagmaCube;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.monster.hoglin.Hoglin;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -38,26 +39,25 @@ public final class CombatEffects {
     }
 
     public static boolean isHostileOrNeutral(Entity target) {
-        return target instanceof HostileEntity || target instanceof PlayerEntity
-                || target instanceof HoglinEntity || target instanceof BeeEntity
-                || target instanceof DolphinEntity || target instanceof GoatEntity
-                || target instanceof GolemEntity || target instanceof LlamaEntity
-                || target instanceof TraderLlamaEntity || target instanceof PandaEntity
-                || target instanceof PolarBearEntity || target instanceof WolfEntity
-                || target instanceof PufferfishEntity || target instanceof SlimeEntity
-                || target instanceof MagmaCubeEntity || target instanceof PhantomEntity
-                || target instanceof EnderDragonEntity;
+        return target instanceof Monster || target instanceof Player
+                || target instanceof Hoglin || target instanceof Bee
+                || target instanceof Dolphin || target instanceof Goat
+                || target instanceof AbstractGolem || target instanceof Llama
+                || target instanceof Panda || target instanceof PolarBear
+                || target instanceof Wolf || target instanceof Pufferfish
+                || target instanceof Slime || target instanceof MagmaCube
+                || target instanceof Phantom || target instanceof EnderDragon;
     }
 
-    public static void onAttack(LivingEntity attacker, Entity target) {
-        if (attacker.getWorld().isClient() || !(target instanceof LivingEntity victim)) {
+    public static void onAttack(ServerLevel level, LivingEntity attacker, Entity target) {
+        if (!(target instanceof LivingEntity victim)) {
             return;
         }
         boolean worthwhile = isHostileOrNeutral(target);
 
         freezingAspect(attacker, victim);
-        enigmaResonator(attacker, victim);
-        painCycle(attacker, victim, worthwhile);
+        enigmaResonator(level, attacker, victim);
+        painCycle(level, attacker, victim, worthwhile);
         soulReaper(attacker, worthwhile);
         onKill(attacker, victim, worthwhile);
     }
@@ -67,29 +67,35 @@ public final class CombatEffects {
             return;
         }
         int level = ModEnchantments.equipmentLevel(attacker, ModEnchantments.FREEZING_ASPECT);
-        if (level > 0 && !victim.isFrozen() && !victim.isInLava()
-                && !victim.getWorld().getDimension().ultrawarm()) {
-            victim.setFrozenTicks(level * 360);
+        if (level > 0 && !victim.isFullyFrozen() && !victim.isInLava() && !tooHotToFreeze(victim)) {
+            victim.setTicksFrozen(level * 360);
         }
     }
 
-    private static void enigmaResonator(LivingEntity attacker, LivingEntity victim) {
+    /**
+     * DimensionType lost its {@code ultraWarm} flag; the dimension-wide value of the attribute that
+     * makes water evaporate is what vanilla now uses to mean "too hot for ice to survive here".
+     */
+    public static boolean tooHotToFreeze(Entity entity) {
+        return entity.level().environmentAttributes().getDimensionValue(EnvironmentAttributes.WATER_EVAPORATES);
+    }
+
+    private static void enigmaResonator(ServerLevel level, LivingEntity attacker, LivingEntity victim) {
         if (ExtraEnchantsMain.CONFIG.enigmaResonator.effectsDisabled()) {
             return;
         }
-        int level = ModEnchantments.equipmentLevel(attacker, ModEnchantments.ENIGMA_RESONATOR);
-        if (level <= 0 || ThreadLocalRandom.current().nextInt(35) > level) {
+        int enchantLevel = ModEnchantments.equipmentLevel(attacker, ModEnchantments.ENIGMA_RESONATOR);
+        if (enchantLevel <= 0 || ThreadLocalRandom.current().nextInt(35) > enchantLevel) {
             return;
         }
-        if (victim.getRecentDamageSource() == null) {
+        if (victim.getLastDamageSource() == null) {
             return;
         }
-        attacker.getWorld().playSound(null, victim.getBlockPos(), SoundEvents.ENTITY_ARROW_HIT_PLAYER,
-                SoundCategory.MASTER, 1f, 1f);
-        victim.damage(victim.getDamageSources().generic(), attacker.getHealth() * 0.75f);
+        playSound(attacker, victim, SoundEvents.ARROW_HIT_PLAYER, 1f);
+        victim.hurtServer(level, victim.damageSources().generic(), attacker.getHealth() * 0.75f);
     }
 
-    private static void painCycle(LivingEntity attacker, LivingEntity victim, boolean worthwhile) {
+    private static void painCycle(ServerLevel level, LivingEntity attacker, LivingEntity victim, boolean worthwhile) {
         if (ExtraEnchantsMain.CONFIG.painCycle.effectsDisabled() || !worthwhile) {
             return;
         }
@@ -101,10 +107,9 @@ public final class CombatEffects {
         }
         int threshold = ExtraEnchantsMain.CONFIG.painCycleThreshold();
         if (state.extraEnchantments$painCycleHits() >= threshold) {
-            if (victim.getRecentDamageSource() != null) {
-                victim.damage(attacker.getDamageSources().magic(), 20);
-                attacker.getWorld().playSound(null, victim.getBlockPos(), SoundEvents.ENTITY_ARROW_HIT_PLAYER,
-                        SoundCategory.MASTER, 1f, 1f);
+            if (victim.getLastDamageSource() != null) {
+                victim.hurtServer(level, attacker.damageSources().magic(), 20);
+                playSound(attacker, victim, SoundEvents.ARROW_HIT_PLAYER, 1f);
                 state.extraEnchantments$setPainCycleHits(0);
             }
             return;
@@ -112,12 +117,11 @@ public final class CombatEffects {
         state.extraEnchantments$setPainCycleHits(state.extraEnchantments$painCycleHits() + 1);
         float cost = ExtraEnchantsMain.CONFIG.painCycleHealthCost();
         if (attacker.getHealth() <= cost) {
-            attacker.damage(attacker.getDamageSources().magic(), 100);
+            attacker.hurtServer(level, attacker.damageSources().magic(), 100);
         } else {
             attacker.setHealth(attacker.getHealth() - cost);
         }
-        attacker.getWorld().playSound(null, attacker.getBlockPos(), SoundEvents.PARTICLE_SOUL_ESCAPE.value(),
-                SoundCategory.MASTER, 3f, 1f);
+        playSound(attacker, attacker, SoundEvents.SOUL_ESCAPE.value(), 3f);
     }
 
     private static void soulReaper(LivingEntity attacker, boolean worthwhile) {
@@ -129,39 +133,41 @@ public final class CombatEffects {
         }
         ThreadLocalRandom random = ThreadLocalRandom.current();
         if (random.nextInt(6) <= 1) {
-            attacker.getWorld().playSound(null, attacker.getBlockPos(), SoundEvents.PARTICLE_SOUL_ESCAPE.value(),
-                    SoundCategory.MASTER, 3f, 1f);
+            playSound(attacker, attacker, SoundEvents.SOUL_ESCAPE.value(), 3f);
             attacker.heal(random.nextInt(1, 5));
         }
     }
 
     private static void onKill(LivingEntity attacker, LivingEntity victim, boolean worthwhile) {
-        if (!worthwhile || !victim.isDead()) {
+        if (!worthwhile || !victim.isDeadOrDying()) {
             return;
         }
 
         if (!ExtraEnchantsMain.CONFIG.frenzy.effectsDisabled()) {
             int level = ModEnchantments.equipmentLevel(attacker, ModEnchantments.FRENZY);
             if (level > 0 && ThreadLocalRandom.current().nextInt(3) == 0) {
-                attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 120, level - 1, false, true, true));
-                attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 120, level - 1, false, true, true));
+                attacker.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 120, level - 1, false, true, true));
+                attacker.addEffect(new MobEffectInstance(MobEffects.SPEED, 120, level - 1, false, true, true));
             }
         }
 
         if (!ExtraEnchantsMain.CONFIG.guardingStrike.effectsDisabled()) {
             int level = ModEnchantments.equipmentLevel(attacker, ModEnchantments.GUARDING_STRIKE);
             if (level > 0) {
-                attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 120, level - 1, false, true, true));
+                attacker.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 120, level - 1, false, true, true));
             }
         }
 
         if (!ExtraEnchantsMain.CONFIG.lifesteal.effectsDisabled()) {
             int level = ModEnchantments.equipmentLevel(attacker, ModEnchantments.LIFESTEAL);
             if (level > 0) {
-                attacker.getWorld().playSound(null, attacker.getBlockPos(), SoundEvents.PARTICLE_SOUL_ESCAPE.value(),
-                        SoundCategory.MASTER, 3f, 1f);
+                playSound(attacker, attacker, SoundEvents.SOUL_ESCAPE.value(), 3f);
                 attacker.heal(victim.getMaxHealth() * 0.001f * level);
             }
         }
+    }
+
+    private static void playSound(LivingEntity source, Entity at, net.minecraft.sounds.SoundEvent sound, float volume) {
+        source.level().playSound(null, at.getX(), at.getY(), at.getZ(), sound, SoundSource.MASTER, volume, 1f);
     }
 }
