@@ -3,7 +3,9 @@ plugins {
     id 'maven-publish'
 }
 
-version = project.mod_version
+// The Minecraft version rides along as SemVer build metadata, so the jar name says which game
+// version it is for and Mod Menu shows it too. Each version branch builds its own jar.
+version = "${project.mod_version}+mc${project.minecraft_version}"
 group = project.maven_group
 
 base {
