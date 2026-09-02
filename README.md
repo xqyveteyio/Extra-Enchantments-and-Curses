@@ -57,10 +57,39 @@ New config option `overshieldHealthPerLevel`, default **4** health points (2 hea
 Overshield V on a chestplate grants +20 points (10 hearts). Upstream hardcoded 2. Set it back to `2` to restore the
 original balance.
 
+### No mixin `@Overwrite` anywhere
+
+Upstream 1.9 replaced six vanilla methods wholesale with `@Overwrite`. A wholesale replacement makes the method
+"merged" as far as Mixin is concerned, and Mixin then *refuses* to let any other mod inject into it, so the game hard
+crashes at startup with `InvalidInjectionException: ... cannot inject into ... merged by ...`. `BowItem.onStoppedUsing`
+and `ItemStack.damage` in particular are targeted by a great many mods.
+
+Every one has been rewritten as a narrow, chainable injection:
+
+| Method | Was | Now |
+| --- | --- | --- |
+| `BowItem.onStoppedUsing` | `@Overwrite` | two `@Redirect`s on the durability and spawn calls |
+| `ItemStack.damage(int, Random, ServerPlayerEntity)` | `@Overwrite` | `@ModifyVariable` on the `amount` argument |
+| `PowderSnowBlock.canWalkOnPowderSnow` | `@Overwrite` | `@Inject` at `HEAD`, cancellable |
+| `MagmaBlock.onSteppedOn` | `@Overwrite` | `@Redirect` on the `Entity.damage` call |
+| `LivingEntity.canFreeze` | `@Overwrite` | `@Inject` at `HEAD`, cancellable |
+| `PlayerEntity.addExhaustion` | `@Overwrite` | `@ModifyVariable` on the `exhaustion` argument |
+
+Two behavioural notes fall out of this:
+
+- Curse of Fragility's extra durability damage is now applied before Unbreaking rolls instead of after, so Unbreaking
+  mitigates part of it. Previously the curse bypassed Unbreaking entirely.
+- Ice Protection's condition was `bl && a < 4 || b < 4 || c < 4 || d < 4`. Java binds `&&` tighter than `||`, so an
+  unenchanted armour slot (level `0 < 4`) forced the whole expression true and made freeze-immune armour stop working
+  whenever the enchantment was enabled. It now does what the name implies: Ice Protection IV or higher on any worn
+  piece prevents freezing.
+
 ### Miscellaneous
 
 - Removed four `System.out.println` debug statements that fired on every Overshield equip change.
 - Fixed a stray semicolon before an import in `Overshield.java`.
+- Echo's durability roll used `nextInt(level, 8)`, which throws `IllegalArgumentException` once a config raises Echo's
+  maximum level to 8 or beyond. The upper bound is now clamped above the level.
 
 ## Migrating from upstream
 

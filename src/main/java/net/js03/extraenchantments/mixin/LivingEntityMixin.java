@@ -11,19 +11,24 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
+
+    @Unique
+    private static final EquipmentSlot[] ARMOUR_SLOTS = {
+            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+    };
 
     @Shadow
     public abstract boolean addStatusEffect(StatusEffectInstance effect);
@@ -48,20 +53,17 @@ public abstract class LivingEntityMixin extends Entity {
         }
     }
 
-    /**
-     * @author JS03
-     * @reason I can't figure out how to use ModifyVariable properly, so I'm doing this instead (for now)
-     */
-    @Overwrite
-    public boolean canFreeze() {
-        if (this.isSpectator()) {
-            return false;
+    @Inject(method = "canFreeze", at = @At("HEAD"), cancellable = true)
+    private void extraEnchantments$iceProtection(CallbackInfoReturnable<Boolean> cir) {
+        if (ExtraEnchantsMain.CONFIG.iceProtection.effectsDisabled()) {
+            return;
         }
-        boolean bl = !this.getEquippedStack(EquipmentSlot.HEAD).isIn(ItemTags.FREEZE_IMMUNE_WEARABLES) && !this.getEquippedStack(EquipmentSlot.CHEST).isIn(ItemTags.FREEZE_IMMUNE_WEARABLES) && !this.getEquippedStack(EquipmentSlot.LEGS).isIn(ItemTags.FREEZE_IMMUNE_WEARABLES) && !this.getEquippedStack(EquipmentSlot.FEET).isIn(ItemTags.FREEZE_IMMUNE_WEARABLES);
-        if (!ExtraEnchantsMain.CONFIG.iceProtection.effectsDisabled()) {
-            bl = bl && EnchantmentHelper.getLevel(ExtraEnchantsMain.ICE_PROTECTION, this.getEquippedStack(EquipmentSlot.HEAD)) < 4 || EnchantmentHelper.getLevel(ExtraEnchantsMain.ICE_PROTECTION, this.getEquippedStack(EquipmentSlot.CHEST)) < 4 || EnchantmentHelper.getLevel(ExtraEnchantsMain.ICE_PROTECTION, this.getEquippedStack(EquipmentSlot.LEGS)) < 4 || EnchantmentHelper.getLevel(ExtraEnchantsMain.ICE_PROTECTION, this.getEquippedStack(EquipmentSlot.FEET)) < 4;
+        for (EquipmentSlot slot : ARMOUR_SLOTS) {
+            if (EnchantmentHelper.getLevel(ExtraEnchantsMain.ICE_PROTECTION, this.getEquippedStack(slot)) >= 4) {
+                cir.setReturnValue(false);
+                return;
+            }
         }
-        return bl && super.canFreeze();
     }
 
 }

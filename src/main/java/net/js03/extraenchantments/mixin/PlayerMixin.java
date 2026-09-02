@@ -24,7 +24,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -318,23 +317,13 @@ public abstract class PlayerMixin extends LivingEntity {
     }
 
 
-    /**
-     * @author JS03
-     * @reason To easily modify the amount of exhaustion the player receives
-     */
-    @Overwrite
-    public void addExhaustion(float exhaustion) {
-        if (this.getAbilities().invulnerable) {
-            return;
+    @ModifyVariable(method = "addExhaustion(F)V", at = @At("HEAD"), argsOnly = true)
+    private float extraEnchantments$energized(float exhaustion) {
+        if (ExtraEnchantsMain.CONFIG.energized.effectsDisabled()) {
+            return exhaustion;
         }
-        if (!this.getWorld().isClient) {
-            if (EnchantmentHelper.getLevel(ExtraEnchantsMain.ENERGIZED, this.getEquippedStack(EquipmentSlot.LEGS)) > 0) {
-                if (!ExtraEnchantsMain.CONFIG.energized.effectsDisabled()) {
-                    this.getHungerManager().addExhaustion(exhaustion / 2);
-                }
-            } else {
-                this.getHungerManager().addExhaustion(exhaustion);
-            }
-        }
+        return EnchantmentHelper.getLevel(ExtraEnchantsMain.ENERGIZED, this.getEquippedStack(EquipmentSlot.LEGS)) > 0
+                ? exhaustion / 2
+                : exhaustion;
     }
 }
