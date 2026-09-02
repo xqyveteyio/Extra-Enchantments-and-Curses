@@ -68,7 +68,7 @@ jobs:
 
           {
             echo "### Building ${#selected[@]} of ${#available[@]} version branches"
-            printf '-  `%s`\n' "${selected[@]}"
+            printf -- '- `%s`\n' "${selected[@]}"
           } >> "$GITHUB_STEP_SUMMARY"
 
           json=$(printf '%s\n' "${selected[@]}" | jq -R . | jq -sc .)
