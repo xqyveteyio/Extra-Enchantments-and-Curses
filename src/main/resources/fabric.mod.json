@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "extra-enchantments-and-curses",
+  "id": "extra-enchantments-and-curses-next",
   "version": "${version}",
 
-  "name": "Extra Enchantments and Curses",
+  "name": "Extra Enchantments and Curses Next",
   "description": "This mod adds some new enchantments and curses to the game",
   "authors": [
     "JS03"
