@@ -1,4 +1,5 @@
 {
+  "itemGroup.extra_enchantments.enchanted_books": "更多附魔与诅咒",
   "enchantment.extra_enchantments.lifesteal": "吸血",
   "enchantment.extra_enchantments.lifesteal.desc": "杀死敌对或中立生物时，根据杀死的生物的生命值治疗自己",
   "enchantment.extra_enchantments.illagers_bane": "灾厄杀手",

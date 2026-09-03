@@ -104,5 +104,7 @@ public class ExtraEnchantsMain implements ModInitializer {
         Registry.register(Registries.ENCHANTMENT, new Identifier("extra_enchantments", "slowness_curse"), CURSE_OF_SLOWNESS);
         Registry.register(Registries.ENCHANTMENT, new Identifier("extra_enchantments", "undead_curse"), CURSE_OF_UNDEAD);
         Registry.register(Registries.ENCHANTMENT, new Identifier("extra_enchantments", "attrition_curse"), CURSE_OF_ATTRITION);
+
+        ExtraEnchantsItemGroup.register();
     }
 }
