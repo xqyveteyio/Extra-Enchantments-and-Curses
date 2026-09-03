@@ -3,6 +3,7 @@ package net.js03.extraenchantments;
 import net.fabricmc.api.ModInitializer;
 import net.js03.extraenchantments.config.ExtraEnchantsConfig;
 import net.js03.extraenchantments.loot.ModLootTables;
+import net.js03.extraenchantments.registry.ModItemGroups;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,5 +17,6 @@ public class ExtraEnchantsMain implements ModInitializer {
         // The enchantments themselves need no registration: since 1.21 they are datapack entries,
         // and this mod's definitions ship under data/extra_enchantments/enchantment.
         ModLootTables.register();
+        ModItemGroups.register();
     }
 }

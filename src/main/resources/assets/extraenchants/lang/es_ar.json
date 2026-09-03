@@ -1,4 +1,5 @@
 {
+  "itemGroup.extra_enchantments.enchanted_books": "Encantamientos y Maldiciones Extra",
   "enchantment.extra_enchantments.lifesteal": "Salud por sangre",
   "enchantment.extra_enchantments.lifesteal.desc": "Cura al usuario dependiendo de la salud máxima de la entidad hostil o neutral asesinada",
   "enchantment.extra_enchantments.illagers_bane": "Maldición Maldeana",
