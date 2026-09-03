@@ -74,8 +74,8 @@
   "enchantment.extra_enchantments.echo.desc": "弓射出的箭可以穿透目标，代价是弓的耐久消耗更快",
   "enchantment.extra_enchantments.energized": "充能",
   "enchantment.extra_enchantments.energized.desc": "减少玩家累积的疲劳度",
-  "enchantment.extra_enchantments.fragility_curse": "易碎诅咒",
-  "enchantment.extra_enchantments.fragility_curse.desc": "物品的耐久消耗速度大幅加快",
+  "enchantment.extra_enchantments.fragility_curse": "脆弱诅咒",
+  "enchantment.extra_enchantments.fragility_curse.desc": "让物品更快的消耗耐久",
   "enchantment.extra_enchantments.ice_protection": "抗冻",
   "enchantment.extra_enchantments.ice_protection.desc": "减少冰冻状态下受到的伤害"
 }
