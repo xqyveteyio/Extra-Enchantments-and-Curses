@@ -1,4 +1,5 @@
 {
+  "itemGroup.extra_enchantments.enchanted_books": "Додаткові чари та прокляття",
   "enchantment.extra_enchantments.lifesteal": "Життєкрад",
   "enchantment.extra_enchantments.lifesteal.desc": "Зцілює гравця після вбивства ворожого або нейтрального моба на основі максимальної кількості здоров'я, яку він мав",
   "enchantment.extra_enchantments.illagers_bane": "Загибель розбійників",
